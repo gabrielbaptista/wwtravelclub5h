@@ -2,32 +2,37 @@
 #
 # Multi-Stage Deployment:
 # - Development: Automatically deploys on push to main
-# - Staging: Automatically deploys after dev on push to main
-# - Production: Requires manual workflow_dispatch trigger
+# - Staging: Requires manual approval after dev deployment
+# - Production: Requires manual approval after staging deployment
 #
 # This workflow assumes you have already created the target Azure App Service web apps for each environment.
 # For instructions see https://docs.microsoft.com/en-us/azure/app-service/quickstart-dotnetcore?tabs=net60&pivots=development-environment-vscode
 #
 # To configure this workflow:
 #
-# 1. Set up Azure Active Directory (Entra ID) authentication with OIDC (OpenID Connect):
-#    a. Create an Azure AD App Registration for GitHub Actions
-#    b. Configure Federated Credentials for your GitHub repository
+# 1. Set up Azure Managed Identity authentication with OIDC (OpenID Connect):
+#    a. Create a User-Assigned Managed Identity in Azure
+#    b. Grant the Managed Identity appropriate permissions to deploy to Azure App Service
+#       (typically "Website Contributor" or "Contributor" role on the App Service)
+#    c. Configure Federated Credentials on the Managed Identity for your GitHub repository
 #       - Entity type: Environment (for development, staging, production)
 #       - GitHub environment name: development, staging, production respectively
-#    c. Grant the App Registration appropriate permissions to deploy to Azure App Service
-#    d. Note the following values from your App Registration:
-#       - Client ID (Application ID)
+#    d. Note the following values from your Managed Identity:
+#       - Client ID (from the Managed Identity overview)
 #       - Tenant ID (Directory ID)
 #       - Subscription ID
 #    For detailed instructions: https://learn.microsoft.com/azure/developer/github/connect-from-azure
 #
 # 2. Create the following secrets in your repository or GitHub Environments:
-#    - AZURE_CLIENT_ID: The Application (client) ID from your App Registration
-#    - AZURE_TENANT_ID: The Directory (tenant) ID from your App Registration
+#    - AZURE_CLIENT_ID: The Client ID from your Managed Identity
+#    - AZURE_TENANT_ID: The Directory (tenant) ID
 #    - AZURE_SUBSCRIPTION_ID: Your Azure subscription ID
 #
-# 3. Configure GitHub Environments (development, staging, production) with appropriate protection rules.
+# 3. Configure GitHub Environments (development, staging, production) with protection rules:
+#    - development: No approval required (auto-deploy on push to main)
+#    - staging: Require reviewers approval before deployment
+#    - production: Require reviewers approval before deployment
+#    Navigate to Settings > Environments in your repository to configure approvers.
 #
 # 4. Create or update Azure Web Apps for each environment with names matching the environment variables below.
 #
@@ -140,6 +145,7 @@ jobs:
     environment:
       name: staging
       url: https://${{ env.AZURE_WEBAPP_NAME_STAGING }}.azurewebsites.net
+    # Approval gateway: Configure required reviewers in GitHub Environment settings
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -162,10 +168,13 @@ jobs:
     name: Deploy to Production
     needs: [build, deploy-staging]
     runs-on: windows-latest
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     environment:
       name: production
       url: https://${{ env.AZURE_WEBAPP_NAME_PROD }}.azurewebsites.net
+    # Approval gateway: Configure required reviewers in GitHub Environment settings
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4

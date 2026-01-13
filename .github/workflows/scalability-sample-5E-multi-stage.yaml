@@ -50,6 +50,8 @@ env:
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 10.0.x
   WORKING_DIRECTORY: ch08/wwtravelclub
+  UNIT_TESTING_DIRECTORY: ch08/wwtravelclub.UnitTests
+  FUNCTIONAL_TESTING_DIRECTORY: ch08/wwtravelclub.FunctionalTests
 
 on:
   push:
@@ -97,7 +99,7 @@ jobs:
       - name: Build application
         run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
       - name: Run unit tests
-        run: dotnet test "${{ env.WORKING_DIRECTORY }}/wwtravelclub.UnitTests" --no-build --verbosity normal --logger "trx;LogFileName=unit-tests.trx"
+        run: dotnet test "${{ env.UNIT_TESTING_DIRECTORY }}" --no-build --verbosity normal --logger "trx;LogFileName=unit-tests.trx"
       - name: Upload unit test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -150,7 +152,7 @@ jobs:
           include-prerelease: true
           dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
       - name: Run functional tests (Development)
-        run: dotnet test "${{ env.WORKING_DIRECTORY }}/wwtravelclub.FunctionalTests" --verbosity normal --logger "trx;LogFileName=functional-tests-dev.trx"
+        run: dotnet test "${{ env.FUNCTIONAL_TESTING_DIRECTORY }}" --verbosity normal --logger "trx;LogFileName=functional-tests-dev.trx"
         env:
           ASPNETCORE_ENVIRONMENT: Development
           TEST_BASE_URL: https://${{ env.AZURE_WEBAPP_NAME_DEV }}.azurewebsites.net
@@ -199,7 +201,7 @@ jobs:
           include-prerelease: true
           dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
       - name: Run functional tests (Staging)
-        run: dotnet test "${{ env.WORKING_DIRECTORY }}/wwtravelclub.FunctionalTests" --verbosity normal --logger "trx;LogFileName=functional-tests-staging.trx"
+        run: dotnet test "${{ env.FUNCTIONAL_TESTING_DIRECTORY }}" --verbosity normal --logger "trx;LogFileName=functional-tests-staging.trx"
         env:
           ASPNETCORE_ENVIRONMENT: Staging
           TEST_BASE_URL: https://${{ env.AZURE_WEBAPP_NAME_STAGING }}.azurewebsites.net
@@ -248,7 +250,7 @@ jobs:
           include-prerelease: true
           dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
       - name: Run functional tests (Production)
-        run: dotnet test "${{ env.WORKING_DIRECTORY }}/wwtravelclub.FunctionalTests" --verbosity normal --logger "trx;LogFileName=functional-tests-production.trx"
+        run: dotnet test "${{ env.FUNCTIONAL_TESTING_DIRECTORY }}" --verbosity normal --logger "trx;LogFileName=functional-tests-production.trx"
         env:
           ASPNETCORE_ENVIRONMENT: Production
           TEST_BASE_URL: https://${{ env.AZURE_WEBAPP_NAME_PROD }}.azurewebsites.net

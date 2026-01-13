@@ -20,7 +20,7 @@ public class TravelDistanceFunctionalTests : IClassFixture<WebApplicationFactory
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync("/TravelDistace");
+        var response = await client.GetAsync("/TravelDistance");
 
         // Assert
         response.EnsureSuccessStatusCode();

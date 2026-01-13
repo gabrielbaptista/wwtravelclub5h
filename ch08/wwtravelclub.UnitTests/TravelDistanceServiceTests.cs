@@ -54,7 +54,7 @@ public class TravelDistanceServiceTests
         var service = new TravelDistanceService();
 
         // Act
-        var distance = service.CalculateDistance("New York", "New York");
+        var distance = service.CalculateDistance("New York", "New York") + 1.5 ;
 
         // Assert
         Assert.Equal(0, distance, 1); // Allow small rounding error

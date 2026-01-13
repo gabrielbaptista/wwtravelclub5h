@@ -106,7 +106,7 @@ jobs:
         with:
           name: unit-test-results
           path: |
-            ${{ env.WORKING_DIRECTORY }}/**/*.trx
+            ${{ env.UNIT_TESTING_DIRECTORY }}/**/*.trx
           retention-days: 7
       - name: Publish application
         run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
@@ -162,7 +162,7 @@ jobs:
         with:
           name: functional-test-results-dev
           path: |
-            ${{ env.WORKING_DIRECTORY }}/**/*.trx
+            ${{ env.FUNCTIONAL_TESTING_DIRECTORY }}/**/*.trx
           retention-days: 7
 
   deploy-staging:
@@ -211,7 +211,7 @@ jobs:
         with:
           name: functional-test-results-staging
           path: |
-            ${{ env.WORKING_DIRECTORY }}/**/*.trx
+            ${{ env.FUNCTIONAL_TESTING_DIRECTORY }}/**/*.trx
           retention-days: 7
 
   deploy-production:
@@ -260,5 +260,5 @@ jobs:
         with:
           name: functional-test-results-production
           path: |
-            ${{ env.WORKING_DIRECTORY }}/**/*.trx
+            ${{ env.FUNCTIONAL_TESTING_DIRECTORY }}/**/*.trx
           retention-days: 7

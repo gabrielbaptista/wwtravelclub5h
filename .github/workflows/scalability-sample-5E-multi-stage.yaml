@@ -96,8 +96,16 @@ jobs:
         run: dotnet tool restore
       - name: Build application
         run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
-      - name: Run tests
-        run: dotnet test "${{ env.WORKING_DIRECTORY }}" --no-build --verbosity normal
+      - name: Run unit tests
+        run: dotnet test "${{ env.WORKING_DIRECTORY }}/wwtravelclub.UnitTests" --no-build --verbosity normal --logger "trx;LogFileName=unit-tests.trx"
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/**/*.trx
+          retention-days: 7
       - name: Publish application
         run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
       - name: Upload build artifacts
@@ -134,6 +142,26 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME_DEV }}
           package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+      - name: Checkout code for tests
+        uses: actions/checkout@v4
+      - name: Setup .NET for tests
+        uses: actions/setup-dotnet@v4
+        with:
+          include-prerelease: true
+          dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+      - name: Run functional tests (Development)
+        run: dotnet test "${{ env.WORKING_DIRECTORY }}/wwtravelclub.FunctionalTests" --verbosity normal --logger "trx;LogFileName=functional-tests-dev.trx"
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          TEST_BASE_URL: https://${{ env.AZURE_WEBAPP_NAME_DEV }}.azurewebsites.net
+      - name: Upload functional test results (Development)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: functional-test-results-dev
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/**/*.trx
+          retention-days: 7
 
   deploy-staging:
     name: Deploy to Staging
@@ -163,6 +191,26 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME_STAGING }}
           package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+      - name: Checkout code for tests
+        uses: actions/checkout@v4
+      - name: Setup .NET for tests
+        uses: actions/setup-dotnet@v4
+        with:
+          include-prerelease: true
+          dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+      - name: Run functional tests (Staging)
+        run: dotnet test "${{ env.WORKING_DIRECTORY }}/wwtravelclub.FunctionalTests" --verbosity normal --logger "trx;LogFileName=functional-tests-staging.trx"
+        env:
+          ASPNETCORE_ENVIRONMENT: Staging
+          TEST_BASE_URL: https://${{ env.AZURE_WEBAPP_NAME_STAGING }}.azurewebsites.net
+      - name: Upload functional test results (Staging)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: functional-test-results-staging
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/**/*.trx
+          retention-days: 7
 
   deploy-production:
     name: Deploy to Production
@@ -192,3 +240,23 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME_PROD }}
           package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+      - name: Checkout code for tests
+        uses: actions/checkout@v4
+      - name: Setup .NET for tests
+        uses: actions/setup-dotnet@v4
+        with:
+          include-prerelease: true
+          dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+      - name: Run functional tests (Production)
+        run: dotnet test "${{ env.WORKING_DIRECTORY }}/wwtravelclub.FunctionalTests" --verbosity normal --logger "trx;LogFileName=functional-tests-production.trx"
+        env:
+          ASPNETCORE_ENVIRONMENT: Production
+          TEST_BASE_URL: https://${{ env.AZURE_WEBAPP_NAME_PROD }}.azurewebsites.net
+      - name: Upload functional test results (Production)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: functional-test-results-production
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/**/*.trx
+          retention-days: 7

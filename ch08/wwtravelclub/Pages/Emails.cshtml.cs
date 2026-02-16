@@ -19,6 +19,7 @@ namespace ch08.Pages
 
         public void OnGet()
         {
+            _logger.LogInformation("OnGet called in EmailsModel.");
         }
     }
 }
